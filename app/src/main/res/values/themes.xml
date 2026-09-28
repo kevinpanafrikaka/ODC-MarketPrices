@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Thème plateforme minimal : l'app est en Compose pur, ce style ne sert
+        qu'avant le premier rendu Compose (fond d'écran, barre de statut).
+        Volontairement basé sur un thème Android natif pour éviter une
+        dépendance inutile à Material Components (déjà couvert par
+        androidx.compose.material3 côté Compose).
+    -->
+    <style name="Theme.PrixDuMarche" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/orange_primary</item>
+    </style>
+</resources>
