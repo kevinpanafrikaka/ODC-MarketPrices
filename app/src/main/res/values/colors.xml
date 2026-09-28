@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Orange Digital Center : couleur de marque, placeholder à ajuster par le Responsable interface -->
+    <color name="orange_primary">#FF6600</color>
+</resources>
