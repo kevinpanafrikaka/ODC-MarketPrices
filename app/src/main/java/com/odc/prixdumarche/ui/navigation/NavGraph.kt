@@ -23,6 +23,12 @@ fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavControlle
             ProduitListScreen(
                 onProduitClick = { produitId ->
                     navController.navigate(Screen.ProduitDetail.buildRoute(produitId))
+                },
+                onAjouterReleve = {
+                    navController.navigate(Screen.ReleveFormulaire.route)
+                },
+                onTableauDeBord = {
+                    navController.navigate(Screen.TableauBord.route)
                 }
             )
         }
@@ -31,7 +37,10 @@ fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavControlle
                 ?.getString("produitId")
                 ?.toLongOrNull()
                 ?: 0L
-            ProduitDetailScreen(produitId = produitId)
+            ProduitDetailScreen(
+                produitId = produitId,
+                onRetour = { navController.popBackStack() }
+            )
         }
         composable(Screen.ReleveFormulaire.route) {
             ReleveFormulaireScreen()
