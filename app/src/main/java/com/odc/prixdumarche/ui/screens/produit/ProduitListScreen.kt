@@ -18,7 +18,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.odc.prixdumarche.ui.theme.*
-import java.util.Locale
+import com.odc.prixdumarche.ui.util.enGnf
+import com.odc.prixdumarche.ui.components.TendancePill
 
 // TODO(données) : remplacer ces 2 classes par les vrais modèles du Repository
 data class ProduitAffiche(
@@ -30,8 +31,6 @@ data class ProduitAffiche(
     val tendance: String // "HAUSSE" | "BAISSE" | "STABLE" — TODO(logique) : idéalement un enum Tendance partagé
 )
 
-private fun Long.enGnf(): String =
-    String.format(Locale.US, "%,d", this).replace(',', ' ') + " GNF"
 
 /**
  * Écran Liste des produits.
@@ -170,10 +169,10 @@ private fun CarteProduit(p: ProduitAffiche, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                Modifier.size(44.dp).background(BaisseFond, CircleShape),
+                Modifier.size(44.dp).background(StableFond, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(p.nom.first().toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Baisse)
+                Text(p.nom.first().toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Stable)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -182,20 +181,15 @@ private fun CarteProduit(p: ProduitAffiche, onClick: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(p.dernierPrixGnf?.enGnf() ?: "Aucun relevé", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                val (texte, couleur, fond) = when (p.tendance) {
-                    "HAUSSE" -> Triple("↑ Hausse", Hausse, HausseFond)
-                    "BAISSE" -> Triple("↓ Baisse", Baisse, BaisseFond)
-                    else -> Triple("→ Stable", Stable, StableFond)
-                }
-                Surface(color = fond, shape = RoundedCornerShape(999.dp)) {
-                    Text(texte, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = couleur, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
-                }
+                TendancePill(p.tendance)
             }
         }
     }
 }
 
 // Données uniquement pour l'aperçu (@Preview) — jamais utilisées dans l'app réelle une fois le ViewModel branché
+// ⚠️ TODO(logique) : valeurs par défaut temporaires, à retirer une fois le ViewModel branché
+
 private val CATEGORIES_FAKE = listOf("Toutes", "Céréales", "Épicerie", "Légumes", "Poissons")
 private val MARCHES_FAKE = listOf("Tous marchés", "Madina", "Niger", "Matoto")
 private val PRODUITS_FAKE = listOf(
