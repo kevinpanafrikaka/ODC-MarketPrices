@@ -43,7 +43,7 @@ fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavControlle
             )
         }
         composable(Screen.ReleveFormulaire.route) {
-            ReleveFormulaireScreen()
+            ReleveFormulaireScreen(onRetour = { navController.popBackStack() })
         }
         composable(Screen.TableauBord.route) {
             TableauBordScreen()

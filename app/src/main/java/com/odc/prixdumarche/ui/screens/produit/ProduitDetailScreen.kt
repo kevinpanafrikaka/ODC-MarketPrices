@@ -21,7 +21,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.odc.prixdumarche.ui.theme.*
-import java.util.Locale
+import com.odc.prixdumarche.ui.util.enGnf
+import com.odc.prixdumarche.ui.components.TendancePill
 
 // TODO(données/logique) : remplacer par les vrais modèles du Repository / ViewModel
 data class PointCourbe(val jour: Int, val prixGnf: Long)
@@ -33,9 +34,6 @@ data class ComparaisonAffichee(
     val plusCherPrixGnf: Long,
     val moyenneGnf: Long
 )
-
-private fun Long.enGnf(): String =
-    String.format(Locale.US, "%,d", this).replace(',', ' ') + " GNF"
 
 /**
  * Écran Détail d'un produit.
@@ -54,7 +52,7 @@ fun ProduitDetailScreen(
     prixParMarche: List<PrixMarcheAffiche> = emptyList(),
     comparaison: ComparaisonAffichee? = null,
     chargement: Boolean = false,
-    onRetour: () -> Unit = {} // TODO(chef de projet) : à brancher sur navController.popBackStack() dans NavGraph.kt
+    onRetour: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -96,7 +94,7 @@ fun ProduitDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Évolution sur 30 jours", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    if (tendance != null) PastilleTendance(tendance)
+                    if (tendance != null) TendancePill(tendance)
                 }
             }
 
@@ -145,18 +143,6 @@ fun ProduitDetailScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun PastilleTendance(tendance: String) {
-    val (texte, couleur, fond) = when (tendance) {
-        "HAUSSE" -> Triple("↑ Hausse", Hausse, HausseFond)
-        "BAISSE" -> Triple("↓ Baisse", Baisse, BaisseFond)
-        else -> Triple("→ Stable", Stable, StableFond)
-    }
-    Surface(color = fond, shape = RoundedCornerShape(999.dp)) {
-        Text(texte, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = couleur, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
     }
 }
 
