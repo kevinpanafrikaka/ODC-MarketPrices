@@ -13,16 +13,24 @@ import androidx.compose.ui.unit.sp
 import com.odc.prixdumarche.ui.theme.*
 
 /**
- * Pastille d'affichage de tendance (Hausse/Baisse/Stable).
- * Composant purement visuel : la valeur "tendance" est reçue toute prête,
- * jamais calculée ici (aucune logique métier dans l'interface).
+ * Pastille d'affichage de tendance (Hausse/Baisse/Stable), avec un pourcentage
+ * optionnel (ex. "+4 %"). Composant purement visuel : tendance et pourcentage
+ * sont reçus tout prêts, jamais calculés ici (aucune logique métier dans l'interface).
  */
 @Composable
-fun TendancePill(tendance: String) {
-    val (texte, couleur, fond) = when (tendance) {
-        "HAUSSE" -> Triple("↑ Hausse", Hausse, HausseFond)
-        "BAISSE" -> Triple("↓ Baisse", Baisse, BaisseFond)
-        else -> Triple("→ Stable", Stable, StableFond)
+fun TendancePill(tendance: String, pourcentage: Int? = null) {
+    val (fleche, couleur, fond) = when (tendance) {
+        "HAUSSE" -> Triple("↑", Hausse, HausseFond)
+        "BAISSE" -> Triple("↓", Baisse, BaisseFond)
+        else -> Triple("→", Stable, StableFond)
+    }
+    val texte = when {
+        pourcentage != null && tendance == "HAUSSE" -> "$fleche +$pourcentage %"
+        pourcentage != null && tendance == "BAISSE" -> "$fleche $pourcentage %"
+        pourcentage != null -> "$fleche $pourcentage %"
+        tendance == "HAUSSE" -> "$fleche Hausse"
+        tendance == "BAISSE" -> "$fleche Baisse"
+        else -> "$fleche Stable"
     }
     Surface(color = fond, shape = RoundedCornerShape(999.dp)) {
         Text(
@@ -34,7 +42,3 @@ fun TendancePill(tendance: String) {
         )
     }
 }
-
-/** Couleur neutre pour un avatar/icône qui ne dépend pas de la tendance. */
-@Composable
-fun couleurAvatarNeutre() = Stable to StableFond

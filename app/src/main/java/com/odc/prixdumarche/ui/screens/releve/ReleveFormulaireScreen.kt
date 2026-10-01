@@ -18,6 +18,8 @@ import com.odc.prixdumarche.ui.theme.PrixDuMarcheTheme
 // TODO(données/logique) : remplacer par les vrais modèles du Repository
 data class OptionChoix(val id: Long, val label: String)
 
+data class MarcheChoix(val id: Long, val nom: String, val commune: String)
+
 /**
  * Écran Formulaire de relevé.
  * Ne contient aucune logique métier : la validation (prix > 0, champs
@@ -29,9 +31,9 @@ data class OptionChoix(val id: Long, val label: String)
 fun ReleveFormulaireScreen(
     // TODO(logique) : remplacer ces valeurs par défaut par viewModel.uiState.collectAsState()
     produits: List<OptionChoix> = PRODUITS_FAKE,
-    marches: List<OptionChoix> = MARCHES_FAKE,
+    marches: List<MarcheChoix> = MARCHES_FAKE,
     produitChoisi: OptionChoix? = null,
-    marcheChoisi: OptionChoix? = null,
+    marcheChoisi: MarcheChoix? = null,
     prixTexte: String = "",
     dateTexte: String = "",
     erreurProduit: String? = null,
@@ -39,7 +41,7 @@ fun ReleveFormulaireScreen(
     erreurPrix: String? = null,
     erreurDate: String? = null,
     onProduitChoisi: (OptionChoix) -> Unit = {},
-    onMarcheChoisi: (OptionChoix) -> Unit = {},
+    onMarcheChoisi: (MarcheChoix) -> Unit = {},
     onPrixChange: (String) -> Unit = {},
     onDateChange: (String) -> Unit = {},
     onEnregistrer: () -> Unit = {},
@@ -78,16 +80,14 @@ fun ReleveFormulaireScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SelecteurOption(
-                label = "Produit",
+            SelecteurProduit(
                 choix = produitChoisi?.label,
                 options = produits,
                 erreur = erreurProduit,
                 onChoisir = onProduitChoisi
             )
-            SelecteurOption(
-                label = "Marché",
-                choix = marcheChoisi?.label,
+            SelecteurMarche(
+                choix = marcheChoisi?.let { "${it.nom} (${it.commune})" },
                 options = marches,
                 erreur = erreurMarche,
                 onChoisir = onMarcheChoisi
@@ -127,8 +127,7 @@ fun ReleveFormulaireScreen(
 }
 
 @Composable
-private fun SelecteurOption(
-    label: String,
+private fun SelecteurProduit(
     choix: String?,
     options: List<OptionChoix>,
     erreur: String?,
@@ -136,7 +135,7 @@ private fun SelecteurOption(
 ) {
     var ouvert by remember { mutableStateOf(false) }
     Column {
-        Text(label, fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+        Text("Produit", fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
         Spacer(Modifier.height(4.dp))
         Box {
             OutlinedButton(
@@ -161,6 +160,52 @@ private fun SelecteurOption(
                     options.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option.label, fontSize = 16.sp) },
+                            onClick = { onChoisir(option); ouvert = false }
+                        )
+                    }
+                }
+            }
+        }
+        if (erreur != null) {
+            Text("⚠ $erreur", fontSize = 14.sp, color = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+@Composable
+private fun SelecteurMarche(
+    choix: String?,
+    options: List<MarcheChoix>,
+    erreur: String?,
+    onChoisir: (MarcheChoix) -> Unit
+) {
+    var ouvert by remember { mutableStateOf(false) }
+    Column {
+        Text("Marché", fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+        Spacer(Modifier.height(4.dp))
+        Box {
+            OutlinedButton(
+                onClick = { ouvert = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = if (erreur != null) {
+                    ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                } else {
+                    ButtonDefaults.outlinedButtonColors()
+                }
+            ) {
+                Text(choix ?: "Choisir...", fontSize = 16.sp, modifier = Modifier.fillMaxWidth())
+            }
+            DropdownMenu(expanded = ouvert, onDismissRequest = { ouvert = false }) {
+                if (options.isEmpty()) {
+                    DropdownMenuItem(
+                        text = { Text("Aucune donnée pour le moment", fontSize = 14.sp) },
+                        onClick = { ouvert = false },
+                        enabled = false
+                    )
+                } else {
+                    options.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text("${option.nom} (${option.commune})", fontSize = 16.sp) },
                             onClick = { onChoisir(option); ouvert = false }
                         )
                     }
@@ -209,7 +254,9 @@ private val PRODUITS_FAKE = listOf(
     OptionChoix(1, "Riz"), OptionChoix(2, "Huile"), OptionChoix(3, "Oignon")
 )
 private val MARCHES_FAKE = listOf(
-    OptionChoix(1, "Madina"), OptionChoix(2, "Niger"), OptionChoix(3, "Matoto")
+    MarcheChoix(1, "Madina", "Matam"),
+    MarcheChoix(2, "Niger", "Kaloum"),
+    MarcheChoix(3, "Matoto", "Matoto")
 )
 
 @Preview(showBackground = true)

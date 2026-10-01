@@ -21,7 +21,7 @@ import com.odc.prixdumarche.ui.theme.*
 import com.odc.prixdumarche.ui.util.enGnf
 import com.odc.prixdumarche.ui.components.TendancePill
 
-// TODO(données) : remplacer ces 2 classes par les vrais modèles du Repository
+// TODO(données) : remplacer par les vrais modèles du Repository
 data class ProduitAffiche(
     val id: Long,
     val nom: String,
@@ -31,6 +31,11 @@ data class ProduitAffiche(
     val tendance: String // "HAUSSE" | "BAISSE" | "STABLE" — TODO(logique) : idéalement un enum Tendance partagé
 )
 
+data class MarcheAffiche(
+    val id: Long,
+    val nom: String,
+    val commune: String
+)
 
 /**
  * Écran Liste des produits.
@@ -44,12 +49,12 @@ fun ProduitListScreen(
     // TODO(logique) : remplacer ces valeurs par défaut par viewModel.uiState.collectAsState()
     produits: List<ProduitAffiche> = PRODUITS_FAKE,
     categories: List<String> = CATEGORIES_FAKE,
-    marches: List<String> = MARCHES_FAKE,
+    marches: List<MarcheAffiche> = MARCHES_FAKE,
     categorieFiltre: String = "Toutes",
-    marcheFiltre: String = "Tous marchés",
+    marcheFiltre: Long? = null, // null = "Tous marchés"
     chargement: Boolean = false,
     onCategorieChoisie: (String) -> Unit = {},
-    onMarcheChoisi: (String) -> Unit = {},
+    onMarcheChoisi: (Long?) -> Unit = {},
     onAjouterReleve: () -> Unit = {},
     onTableauDeBord: () -> Unit = {}
 ) {
@@ -109,8 +114,11 @@ fun ProduitListScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(marches) { m ->
-                    ChipFiltre(m, m == marcheFiltre) { onMarcheChoisi(m) }
+                item {
+                    ChipFiltre("Tous marchés", marcheFiltre == null) { onMarcheChoisi(null) }
+                }
+                items(marches, key = { it.id }) { m ->
+                    ChipFiltre("${m.nom} (${m.commune})", m.id == marcheFiltre) { onMarcheChoisi(m.id) }
                 }
             }
 
@@ -189,9 +197,12 @@ private fun CarteProduit(p: ProduitAffiche, onClick: () -> Unit) {
 
 // Données uniquement pour l'aperçu (@Preview) — jamais utilisées dans l'app réelle une fois le ViewModel branché
 // ⚠️ TODO(logique) : valeurs par défaut temporaires, à retirer une fois le ViewModel branché
-
 private val CATEGORIES_FAKE = listOf("Toutes", "Céréales", "Épicerie", "Légumes", "Poissons")
-private val MARCHES_FAKE = listOf("Tous marchés", "Madina", "Niger", "Matoto")
+private val MARCHES_FAKE = listOf(
+    MarcheAffiche(1, "Madina", "Matam"),
+    MarcheAffiche(2, "Niger", "Kaloum"),
+    MarcheAffiche(3, "Matoto", "Matoto")
+)
 private val PRODUITS_FAKE = listOf(
     ProduitAffiche(1, "Riz", "kg", "Céréales", 9_600, "HAUSSE"),
     ProduitAffiche(2, "Huile", "litre", "Épicerie", 18_900, "HAUSSE"),

@@ -11,10 +11,12 @@ import com.odc.prixdumarche.ui.screens.produit.ProduitListScreen
 import com.odc.prixdumarche.ui.screens.releve.ReleveFormulaireScreen
 
 /**
- * Graphe de navigation de référence reliant les 4 écrans du MVP.
- * Chaque écran est encore un stub (voir TODO dans son fichier) : cette
- * fonction ne fait que prouver que la navigation compile et fonctionne,
- * pour que chacun puisse brancher son travail sans attendre les autres.
+ * Graphe de navigation reliant les 4 écrans du MVP (liste, détail, formulaire,
+ * tableau de bord). Les écrans sont terminés côté interface (Responsable interface) :
+ * mise en page, thème et navigation sont en place, avec des valeurs factices
+ * par défaut (voir TODO(logique) dans chaque fichier d'écran). Les ViewModels
+ * du Responsable logique métier restent à brancher pour remplacer ces valeurs
+ * par les vraies données issues du Repository.
  */
 @Composable
 fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavController()) {
@@ -46,7 +48,7 @@ fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavControlle
             ReleveFormulaireScreen(onRetour = { navController.popBackStack() })
         }
         composable(Screen.TableauBord.route) {
-            TableauBordScreen()
+            TableauBordScreen(onRetour = { navController.popBackStack() })
         }
     }
 }

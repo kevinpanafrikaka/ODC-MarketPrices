@@ -26,11 +26,23 @@ import com.odc.prixdumarche.ui.components.TendancePill
 
 // TODO(données/logique) : remplacer par les vrais modèles du Repository / ViewModel
 data class PointCourbe(val jour: Int, val prixGnf: Long)
-data class PrixMarcheAffiche(val marche: String, val date: String, val prixGnf: Long)
+
+data class PrixMarcheAffiche(
+    val marcheId: Long,
+    val marche: String,
+    val commune: String,
+    val date: String,
+    val prixGnf: Long
+)
+
 data class ComparaisonAffichee(
+    val moinsCherMarcheId: Long,
     val moinsCherMarche: String,
+    val moinsCherCommune: String,
     val moinsCherPrixGnf: Long,
+    val plusCherMarcheId: Long,
     val plusCherMarche: String,
+    val plusCherCommune: String,
     val plusCherPrixGnf: Long,
     val moyenneGnf: Long
 )
@@ -47,7 +59,7 @@ fun ProduitDetailScreen(
     // TODO(logique) : remplacer ces valeurs par défaut par viewModel.uiState.collectAsState()
     nomProduit: String = "Chargement...",
     unite: String = "",
-    tendance: String? = null, // "HAUSSE" | "BAISSE" | "STABLE" — TODO(logique) : aligner en enum partagé avec ProduitListScreen
+    tendance: String? = null, // "HAUSSE" | "BAISSE" | "STABLE" — TODO(logique) : aligner en enum partagé
     historique: List<PointCourbe> = emptyList(),
     prixParMarche: List<PrixMarcheAffiche> = emptyList(),
     comparaison: ComparaisonAffichee? = null,
@@ -115,8 +127,20 @@ fun ProduitDetailScreen(
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("Comparaison entre marchés", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                TuileComparaison("Le moins cher", comparaison.moinsCherMarche, comparaison.moinsCherPrixGnf.enGnf(), Baisse, BaisseFond, Modifier.weight(1f))
-                                TuileComparaison("Le plus cher", comparaison.plusCherMarche, comparaison.plusCherPrixGnf.enGnf(), Hausse, HausseFond, Modifier.weight(1f))
+                                TuileComparaison(
+                                    "Le moins cher",
+                                    comparaison.moinsCherMarche,
+                                    comparaison.moinsCherCommune,
+                                    comparaison.moinsCherPrixGnf.enGnf(),
+                                    Baisse, BaisseFond, Modifier.weight(1f)
+                                )
+                                TuileComparaison(
+                                    "Le plus cher",
+                                    comparaison.plusCherMarche,
+                                    comparaison.plusCherCommune,
+                                    comparaison.plusCherPrixGnf.enGnf(),
+                                    Hausse, HausseFond, Modifier.weight(1f)
+                                )
                             }
                             Text("Moyenne : ${comparaison.moyenneGnf.enGnf()}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         }
@@ -147,7 +171,15 @@ fun ProduitDetailScreen(
 }
 
 @Composable
-private fun TuileComparaison(label: String, marche: String, prix: String, texteColor: Color, fond: Color, modifier: Modifier = Modifier) {
+private fun TuileComparaison(
+    label: String,
+    marche: String,
+    commune: String,
+    prix: String,
+    texteColor: Color,
+    fond: Color,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier
             .background(fond, shape = RoundedCornerShape(12.dp))
@@ -155,6 +187,7 @@ private fun TuileComparaison(label: String, marche: String, prix: String, texteC
     ) {
         Text(label, fontSize = 14.sp, color = texteColor)
         Text(marche, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = texteColor)
+        Text(commune, fontSize = 14.sp, color = texteColor)
         Text(prix, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = texteColor)
     }
 }
@@ -168,6 +201,7 @@ private fun LigneMarche(m: PrixMarcheAffiche, dernier: Boolean) {
     ) {
         Column {
             Text(m.marche, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(m.commune, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(m.date, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Text(m.prixGnf.enGnf(), fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -236,11 +270,15 @@ fun ProduitDetailScreenPreview() {
                 PointCourbe(18, 9400), PointCourbe(24, 9300), PointCourbe(30, 9600)
             ),
             prixParMarche = listOf(
-                PrixMarcheAffiche("Madina", "26/09/2026", 9_500),
-                PrixMarcheAffiche("Niger", "27/09/2026", 9_000),
-                PrixMarcheAffiche("Matoto", "25/09/2026", 10_200)
+                PrixMarcheAffiche(1, "Madina", "Matam", "26/09/2026", 9_500),
+                PrixMarcheAffiche(2, "Niger", "Kaloum", "27/09/2026", 9_000),
+                PrixMarcheAffiche(3, "Matoto", "Matoto", "25/09/2026", 10_200)
             ),
-            comparaison = ComparaisonAffichee("Niger", 9_000, "Matoto", 10_200, 9_567)
+            comparaison = ComparaisonAffichee(
+                moinsCherMarcheId = 2, moinsCherMarche = "Niger", moinsCherCommune = "Kaloum", moinsCherPrixGnf = 9_000,
+                plusCherMarcheId = 3, plusCherMarche = "Matoto", plusCherCommune = "Matoto", plusCherPrixGnf = 10_200,
+                moyenneGnf = 9_567
+            )
         )
     }
 }
