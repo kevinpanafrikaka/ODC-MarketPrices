@@ -17,25 +17,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.odc.prixdumarche.domain.model.MarcheAffiche
+import com.odc.prixdumarche.domain.model.ProduitAffiche
 import com.odc.prixdumarche.ui.theme.*
 import com.odc.prixdumarche.ui.util.enGnf
 import com.odc.prixdumarche.ui.components.TendancePill
 
 // TODO(données) : remplacer par les vrais modèles du Repository
-data class ProduitAffiche(
-    val id: Long,
-    val nom: String,
-    val unite: String,
-    val categorie: String,
-    val dernierPrixGnf: Long?,
-    val tendance: String // "HAUSSE" | "BAISSE" | "STABLE" — TODO(logique) : idéalement un enum Tendance partagé
-)
 
-data class MarcheAffiche(
-    val id: Long,
-    val nom: String,
-    val commune: String
-)
+
 
 /**
  * Écran Liste des produits.

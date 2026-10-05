@@ -13,17 +13,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.odc.prixdumarche.domain.model.VariationAffichee
 import com.odc.prixdumarche.ui.components.TendancePill
 import com.odc.prixdumarche.ui.theme.PrixDuMarcheTheme
 import com.odc.prixdumarche.ui.util.enGnf
 
 // TODO(données/logique) : remplacer par le vrai modèle du Repository / ViewModel
-data class VariationAffichee(
-    val nomProduit: String,
-    val prixGnf: Long,
-    val pourcentage: Int,
-    val tendance: String // "HAUSSE" | "BAISSE" — TODO(logique) : aligner en enum partagé
-)
 
 /**
  * Écran Tableau de bord.
