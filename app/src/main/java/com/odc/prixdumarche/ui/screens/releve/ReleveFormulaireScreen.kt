@@ -13,12 +13,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.odc.prixdumarche.domain.model.MarcheChoix
+import com.odc.prixdumarche.domain.model.OptionChoix
 import com.odc.prixdumarche.ui.theme.PrixDuMarcheTheme
 
 // TODO(données/logique) : remplacer par les vrais modèles du Repository
-data class OptionChoix(val id: Long, val label: String)
 
-data class MarcheChoix(val id: Long, val nom: String, val commune: String)
 
 /**
  * Écran Formulaire de relevé.

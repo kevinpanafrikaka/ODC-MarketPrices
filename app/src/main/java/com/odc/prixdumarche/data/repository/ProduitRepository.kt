@@ -22,3 +22,5 @@ class ProduitRepositoryImpl(private val produitDao: ProduitDao) : ProduitReposit
 
     override suspend fun ajouter(produit: Produit): Long = produitDao.insert(produit)
 }
+
+

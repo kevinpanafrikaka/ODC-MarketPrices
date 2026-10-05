@@ -20,32 +20,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.odc.prixdumarche.domain.model.ComparaisonAffichee
+import com.odc.prixdumarche.domain.model.PointCourbe
+import com.odc.prixdumarche.domain.model.PrixMarcheAffiche
 import com.odc.prixdumarche.ui.theme.*
 import com.odc.prixdumarche.ui.util.enGnf
 import com.odc.prixdumarche.ui.components.TendancePill
 
 // TODO(données/logique) : remplacer par les vrais modèles du Repository / ViewModel
-data class PointCourbe(val jour: Int, val prixGnf: Long)
 
-data class PrixMarcheAffiche(
-    val marcheId: Long,
-    val marche: String,
-    val commune: String,
-    val date: String,
-    val prixGnf: Long
-)
 
-data class ComparaisonAffichee(
-    val moinsCherMarcheId: Long,
-    val moinsCherMarche: String,
-    val moinsCherCommune: String,
-    val moinsCherPrixGnf: Long,
-    val plusCherMarcheId: Long,
-    val plusCherMarche: String,
-    val plusCherCommune: String,
-    val plusCherPrixGnf: Long,
-    val moyenneGnf: Long
-)
 
 /**
  * Écran Détail d'un produit.
