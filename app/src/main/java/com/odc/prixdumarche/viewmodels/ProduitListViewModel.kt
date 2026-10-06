@@ -11,6 +11,7 @@ import com.odc.prixdumarche.data.repository.ReleveePrixRepository
 import com.odc.prixdumarche.domain.Tendance
 import com.odc.prixdumarche.domain.model.MarcheAffiche
 import com.odc.prixdumarche.domain.model.ProduitAffiche
+import com.odc.prixdumarche.domain.model.VariationAffichee
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +23,9 @@ data class ProduitListUiData(
     val categories: List<String> = emptyList(),
     val marches: List<MarcheAffiche> = emptyList(),
     val categorieFiltre: String = "Toutes",
-    val marcheFiltre: Long? = null
+    val marcheFiltre: Long? = null,
+    val panierMoyenGnf: Long? = null,
+    val meilleurMouvement: VariationAffichee? = null
 )
 
 class ProduitListViewModel(
@@ -119,16 +122,59 @@ class ProduitListViewModel(
                     unite = produit.unite,
                     categorie = produit.categorie,
                     dernierPrixGnf = dernier?.prixGnf,
-                    tendance = calculerTendance(releves).name
+                    tendance = calculerTendance(releves).name,
+                    historiquePrixGnf = releves.asReversed().map { it.prixGnf }
                 )
             }
+
+        // Panier moyen et meilleur mouvement : calculés sur TOUT le catalogue,
+        // indépendamment des filtres actifs, pour que la carte d'accroche ne
+        // change pas de sens quand on filtre la liste en dessous.
+        val derniersPrixTousProduits = produits.mapNotNull { produit ->
+            prixParProduit[produit.id].orEmpty().maxByOrNull { it.date }?.prixGnf
+        }
+        val panierMoyen = derniersPrixTousProduits
+            .takeIf { it.isNotEmpty() }
+            ?.average()
+            ?.toLong()
+
+        val meilleurMouvement = produits
+            .mapNotNull { produit ->
+                calculerVariationPourcentage(produit.nom, prixParProduit[produit.id].orEmpty())
+            }
+            .maxByOrNull { it.pourcentage }
 
         return ProduitListUiData(
             produits = produitsAffiches,
             categories = categories,
             marches = marchesAffiches,
             categorieFiltre = categorie,
-            marcheFiltre = marcheId
+            marcheFiltre = marcheId,
+            panierMoyenGnf = panierMoyen,
+            meilleurMouvement = meilleurMouvement
+        )
+    }
+
+    private fun calculerVariationPourcentage(
+        nomProduit: String,
+        releves: List<ReleveePrix>
+    ): VariationAffichee? {
+
+        val tries = releves.sortedBy { it.date }
+        if (tries.size < 2) return null
+
+        val precedent = tries[tries.lastIndex - 1].prixGnf
+        val dernier = tries.last().prixGnf
+        if (precedent <= 0 || dernier == precedent) return null
+
+        val pourcentage = ((dernier - precedent).toDouble() / precedent.toDouble() * 100).toInt()
+        val tendance = if (dernier > precedent) Tendance.HAUSSE else Tendance.BAISSE
+
+        return VariationAffichee(
+            nomProduit = nomProduit,
+            prixGnf = dernier,
+            pourcentage = kotlin.math.abs(pourcentage),
+            tendance = tendance.name
         )
     }
 

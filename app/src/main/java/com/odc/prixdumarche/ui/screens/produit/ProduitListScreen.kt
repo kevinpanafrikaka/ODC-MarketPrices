@@ -9,18 +9,26 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.odc.prixdumarche.domain.model.MarcheAffiche
 import com.odc.prixdumarche.domain.model.ProduitAffiche
+import com.odc.prixdumarche.domain.model.VariationAffichee
 import com.odc.prixdumarche.ui.theme.*
+import com.odc.prixdumarche.ui.util.categorieIcon
 import com.odc.prixdumarche.ui.util.enGnf
+import com.odc.prixdumarche.ui.components.MiniSparkline
 import com.odc.prixdumarche.ui.components.TendancePill
 
 // TODO(données) : remplacer par les vrais modèles du Repository
@@ -42,6 +50,8 @@ fun ProduitListScreen(
     marches: List<MarcheAffiche> = MARCHES_FAKE,
     categorieFiltre: String = "Toutes",
     marcheFiltre: Long? = null, // null = "Tous marchés"
+    panierMoyenGnf: Long? = null,
+    meilleurMouvement: VariationAffichee? = null,
     chargement: Boolean = false,
     onCategorieChoisie: (String) -> Unit = {},
     onMarcheChoisi: (Long?) -> Unit = {},
@@ -92,12 +102,19 @@ fun ProduitListScreen(
         }
     ) { padding ->
         Column(Modifier.padding(padding)) {
+            if (panierMoyenGnf != null) {
+                CarteAccroche(
+                    panierMoyenGnf = panierMoyenGnf,
+                    meilleurMouvement = meilleurMouvement,
+                    onClick = onTableauDeBord
+                )
+            }
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(categories) { c ->
-                    ChipFiltre(c, c == categorieFiltre) { onCategorieChoisie(c) }
+                    ChipFiltreCategorie(c, c == categorieFiltre) { onCategorieChoisie(c) }
                 }
             }
             LazyRow(
@@ -156,6 +173,85 @@ private fun ChipFiltre(label: String, actif: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
+private fun ChipFiltreCategorie(label: String, actif: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        color = if (actif) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, if (actif) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
+        shape = RoundedCornerShape(999.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+        ) {
+            Icon(
+                categorieIcon(label),
+                contentDescription = null,
+                tint = if (actif) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                label,
+                fontSize = 14.sp,
+                fontWeight = if (actif) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (actif) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun CarteAccroche(
+    panierMoyenGnf: Long,
+    meilleurMouvement: VariationAffichee?,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Outlined.Insights,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Panier moyen : ${panierMoyenGnf.enGnf()}",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (meilleurMouvement != null) {
+                    val signe = if (meilleurMouvement.tendance == "HAUSSE") "+" else "-"
+                    Text(
+                        "${meilleurMouvement.nomProduit} $signe${meilleurMouvement.pourcentage} % cette période",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Icon(
+                Icons.Filled.ChevronRight,
+                contentDescription = "Voir le tableau de bord",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
 private fun CarteProduit(p: ProduitAffiche, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
@@ -170,16 +266,34 @@ private fun CarteProduit(p: ProduitAffiche, onClick: () -> Unit) {
                 Modifier.size(44.dp).background(StableFond, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(p.nom.first().toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Stable)
+                Icon(categorieIcon(p.categorie), contentDescription = p.categorie, tint = Stable, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(p.nom, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("par ${p.unite} · ${p.categorie}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    "par ${p.unite} · ${p.categorie}",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(p.dernierPrixGnf?.enGnf() ?: "Aucun relevé", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                TendancePill(p.tendance)
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (p.historiquePrixGnf.size >= 3) {
+                        val couleurCourbe = when (p.tendance) {
+                            "HAUSSE" -> Hausse
+                            "BAISSE" -> Baisse
+                            else -> Stable
+                        }
+                        MiniSparkline(p.historiquePrixGnf, couleurCourbe)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    TendancePill(p.tendance)
+                }
             }
         }
     }
@@ -194,17 +308,21 @@ private val MARCHES_FAKE = listOf(
     MarcheAffiche(3, "Matoto", "Matoto")
 )
 private val PRODUITS_FAKE = listOf(
-    ProduitAffiche(1, "Riz", "kg", "Céréales", 9_600, "HAUSSE"),
-    ProduitAffiche(2, "Huile", "litre", "Épicerie", 18_900, "HAUSSE"),
-    ProduitAffiche(3, "Oignon", "kg", "Légumes", 7_300, "STABLE"),
-    ProduitAffiche(4, "Tomate", "tas", "Légumes", 4_800, "BAISSE"),
-    ProduitAffiche(5, "Poisson", "kg", "Poissons", 34_500, "BAISSE")
+    ProduitAffiche(1, "Riz", "kg", "Céréales", 9_600, "HAUSSE", listOf(8_900, 9_100, 9_300, 9_600)),
+    ProduitAffiche(2, "Huile", "litre", "Épicerie", 18_900, "HAUSSE", listOf(17_500, 18_000, 18_900)),
+    ProduitAffiche(3, "Oignon", "kg", "Légumes", 7_300, "STABLE", listOf(7_300, 7_300, 7_300)),
+    ProduitAffiche(4, "Tomate", "tas", "Légumes", 4_800, "BAISSE", listOf(5_900, 5_200, 4_800)),
+    ProduitAffiche(5, "Poisson", "kg", "Poissons", 34_500, "BAISSE", listOf(37_000, 35_800, 34_500))
 )
 
 @Preview(showBackground = true)
 @Composable
 fun ProduitListScreenPreview() {
     PrixDuMarcheTheme {
-        ProduitListScreen(onProduitClick = {})
+        ProduitListScreen(
+            onProduitClick = {},
+            panierMoyenGnf = 15_020,
+            meilleurMouvement = VariationAffichee("Riz", 9_600, 8, "HAUSSE")
+        )
     }
 }
