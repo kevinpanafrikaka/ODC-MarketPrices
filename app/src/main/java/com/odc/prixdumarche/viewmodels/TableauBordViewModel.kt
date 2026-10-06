@@ -3,15 +3,20 @@ package com.odc.prixdumarche.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.odc.prixdumarche.data.local.entity.Produit
+import com.odc.prixdumarche.data.local.entity.ReleveePrix
 import com.odc.prixdumarche.data.repository.ProduitRepository
 import com.odc.prixdumarche.data.repository.ReleveePrixRepository
 import com.odc.prixdumarche.domain.Tendance
 import com.odc.prixdumarche.domain.model.VariationAffichee
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 data class TableauBordUiData(
     val panierMoyenGnf: Long?,
@@ -35,89 +40,77 @@ class TableauBordViewModel(
         observerProduits()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observerProduits() {
-
         viewModelScope.launch {
-
             produitRepository
                 .observerProduits()
-                .collect { produits ->
-
-                    if (produits.isEmpty()) {
-                        _uiState.value = UiState.Empty
-                        return@collect
-                    }
-
-                    calculerTableauDeBord(produits)
+                .flatMapLatest { produits -> observerTableauDeBord(produits) }
+                .collect { data ->
+                    _uiState.value = if (data == null) UiState.Empty else UiState.Success(data)
                 }
         }
     }
 
-    private fun calculerTableauDeBord(
+    /**
+     * flatMapLatest garantit qu'un changement de la liste de produits annule
+     * proprement les souscriptions aux historiques précédents avant d'en
+     * recréer de nouvelles, au lieu de les empiler.
+     */
+    private fun observerTableauDeBord(
         produits: List<Produit>
-    ) {
+    ): Flow<TableauBordUiData?> {
 
-        viewModelScope.launch {
-
-            val historiques = produits.map { produit ->
-
-                produit.id to
-                        releveePrixRepository
-                            .observerHistorique30Jours(produit.id)
-            }
-
-            combine(
-                historiques.map { it.second }
-            ) { tableaux ->
-
-                produits.mapIndexed { index, produit ->
-
-                    produit to tableaux[index]
-                }
-
-            }.collect { donnees ->
-
-                val variations = donnees.mapNotNull {
-                    calculerVariation(it.first, it.second)
-                }
-
-                val derniersPrix = donnees.mapNotNull { (_, releves) ->
-                    releves.maxByOrNull { it.date }?.prixGnf
-                }
-
-                val panierMoyen =
-                    if (derniersPrix.isEmpty()) {
-                        null
-                    } else {
-                        derniersPrix.average().toLong()
-                    }
-
-                val hausses = variations
-                    .filter { it.tendance == Tendance.HAUSSE.name }
-                    .sortedByDescending { it.pourcentage }
-
-                val baisses = variations
-                    .filter { it.tendance == Tendance.BAISSE.name }
-                    .sortedBy { it.pourcentage }
-
-                val data = TableauBordUiData(
-                    panierMoyenGnf = panierMoyen,
-                    nbProduitsPanier = derniersPrix.size,
-                    hausses = hausses,
-                    baisses = baisses
-                )
-
-                if (
-                    panierMoyen == null &&
-                    hausses.isEmpty() &&
-                    baisses.isEmpty()
-                ) {
-                    _uiState.value = UiState.Empty
-                } else {
-                    _uiState.value = UiState.Success(data)
-                }
-            }
+        if (produits.isEmpty()) {
+            return flowOf(null)
         }
+
+        val historiques = produits.map { produit ->
+            releveePrixRepository.observerHistorique30Jours(produit.id)
+        }
+
+        return combine(historiques) { tableaux ->
+            calculerTableauDeBord(produits.zip(tableaux))
+        }
+    }
+
+    private fun calculerTableauDeBord(
+        donnees: List<Pair<Produit, List<ReleveePrix>>>
+    ): TableauBordUiData? {
+
+        val variations = donnees.mapNotNull {
+            calculerVariation(it.first, it.second)
+        }
+
+        val derniersPrix = donnees.mapNotNull { (_, releves) ->
+            releves.maxByOrNull { it.date }?.prixGnf
+        }
+
+        val panierMoyen =
+            if (derniersPrix.isEmpty()) {
+                null
+            } else {
+                derniersPrix.average().toLong()
+            }
+
+        val hausses = variations
+            .filter { it.tendance == Tendance.HAUSSE.name }
+            .sortedByDescending { it.pourcentage }
+
+        val baisses = variations
+            .filter { it.tendance == Tendance.BAISSE.name }
+            .sortedBy { it.pourcentage }
+
+        if (panierMoyen == null && hausses.isEmpty() && baisses.isEmpty()) {
+            return null
+        }
+
+        return TableauBordUiData(
+            panierMoyenGnf = panierMoyen,
+            nbProduitsPanier = derniersPrix.size,
+            hausses = hausses,
+            baisses = baisses
+        )
     }
 
     private fun calculerVariation(

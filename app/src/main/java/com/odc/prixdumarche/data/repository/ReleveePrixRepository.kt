@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
  */
 interface ReleveePrixRepository {
     fun observerDerniersPrixParProduit(): Flow<List<ReleveePrix>>
+    fun observerTousLesReleves(): Flow<List<ReleveePrix>>
     fun observerHistorique30Jours(produitId: Long): Flow<List<ReleveePrix>>
     fun observerDernierPrixParMarche(produitId: Long): Flow<List<ReleveePrix>>
     suspend fun ajouter(releve: ReleveePrix): Long
@@ -25,6 +26,9 @@ class ReleveePrixRepositoryImpl(
 
     override fun observerDerniersPrixParProduit(): Flow<List<ReleveePrix>> =
         releveePrixDao.observerDerniersPrixParProduit()
+
+    override fun observerTousLesReleves(): Flow<List<ReleveePrix>> =
+        releveePrixDao.observerTousLesReleves()
 
     override fun observerHistorique30Jours(produitId: Long): Flow<List<ReleveePrix>> {
         val depuis = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30)
