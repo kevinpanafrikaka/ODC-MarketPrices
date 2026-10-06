@@ -22,6 +22,12 @@ private val LightColors = lightColorScheme(
 private val DarkColors = darkColorScheme(
     primary = VertClair,
     onPrimary = VertFonce,
+    background = FondSombre,
+    onBackground = OnSombre,
+    surface = SurfaceSombre,
+    onSurface = OnSombre,
+    onSurfaceVariant = OnSombreVariant,
+    outline = BordureSombre,
     error = Hausse,
     errorContainer = HausseFond
 )

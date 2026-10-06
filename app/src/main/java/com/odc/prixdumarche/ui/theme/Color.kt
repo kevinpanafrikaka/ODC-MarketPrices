@@ -19,3 +19,11 @@ val Surface = Color(0xFFFFFFFF)
 val OnSurface = Color(0xFF1C1C1A)
 val OnSurfaceVariant = Color(0xFF4A4A48)
 val Bordure = Color(0xFFE0E0DA)
+
+// Palette thème sombre : neutres teintés de vert pour rester cohérent avec le
+// bandeau de marque (VertClair/VertFonce), au lieu des gris Material3 par défaut.
+val FondSombre = Color(0xFF10140F)
+val SurfaceSombre = Color(0xFF1A1F18)
+val OnSombre = Color(0xFFE7EAE5)
+val OnSombreVariant = Color(0xFFB4B8AF)
+val BordureSombre = Color(0xFF32392F)

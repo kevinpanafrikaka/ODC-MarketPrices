@@ -17,6 +17,7 @@ import com.odc.prixdumarche.ui.screens.dashboard.TableauBordScreen
 import com.odc.prixdumarche.ui.screens.produit.ProduitDetailScreen
 import com.odc.prixdumarche.ui.screens.produit.ProduitListScreen
 import com.odc.prixdumarche.ui.screens.releve.ReleveFormulaireScreen
+import com.odc.prixdumarche.ui.screens.splash.SplashScreen
 import com.odc.prixdumarche.viewmodels.ProduitDetailViewModel
 import com.odc.prixdumarche.viewmodels.ProduitListViewModel
 import com.odc.prixdumarche.viewmodels.ReleveFormulaireViewModel
@@ -32,7 +33,16 @@ import com.odc.prixdumarche.viewmodels.UiState
 fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavController()) {
     val container = appContainer()
 
-    NavHost(navController = navController, startDestination = Screen.ProduitListe.route) {
+    NavHost(navController = navController, startDestination = Screen.Splash.route) {
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                onTermine = {
+                    navController.navigate(Screen.ProduitListe.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.ProduitListe.route) {
             val viewModel: ProduitListViewModel = viewModel(
                 factory = viewModelFactory {
