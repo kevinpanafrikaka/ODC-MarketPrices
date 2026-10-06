@@ -13,4 +13,5 @@ sealed class Screen(val route: String) {
     }
     data object ReleveFormulaire : Screen("releve")
     data object TableauBord : Screen("tableau-de-bord")
+    data object Favoris : Screen("favoris")
 }

@@ -23,7 +23,7 @@ fun categorieIcon(categorie: String): ImageVector = when (categorie) {
     "Céréales" -> Icons.Outlined.Grain
     "Tubercules" -> Icons.Outlined.Spa
     "Huiles" -> Icons.Outlined.WaterDrop
-    "Légumineuses" -> Icons.Outlined.Nature
+    "Oléagineux" -> Icons.Outlined.Nature
     "Légumes" -> Icons.Outlined.Eco
     "Poissons" -> Icons.Outlined.SetMeal
     "Fruits" -> Icons.Outlined.LocalFlorist

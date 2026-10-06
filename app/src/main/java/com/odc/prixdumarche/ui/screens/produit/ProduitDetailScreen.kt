@@ -2,21 +2,33 @@ package com.odc.prixdumarche.ui.screens.produit
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.ShoppingBasket
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,16 +37,17 @@ import com.odc.prixdumarche.domain.model.PointCourbe
 import com.odc.prixdumarche.domain.model.PrixMarcheAffiche
 import com.odc.prixdumarche.ui.theme.*
 import com.odc.prixdumarche.ui.util.enGnf
+import com.odc.prixdumarche.ui.util.produitImageRes
 import com.odc.prixdumarche.ui.components.TendancePill
 
 // TODO(données/logique) : remplacer par les vrais modèles du Repository / ViewModel
-
-
 
 /**
  * Écran Détail d'un produit.
  * Ne contient aucune logique métier : historique, comparaison, min/max/moyenne
  * et tendance sont calculés en amont (ViewModel) et transmis tout prêts ici.
+ * Le bandeau héros reprend le prix le plus récent de l'historique (dernier
+ * point de la courbe 30 jours) plutôt que de recalculer quoi que ce soit ici.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,14 +67,7 @@ fun ProduitDetailScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = {
-                    Column {
-                        Text(nomProduit, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        if (unite.isNotBlank()) {
-                            Text("Prix en GNF par $unite", fontSize = 14.sp)
-                        }
-                    }
-                },
+                title = { Text(nomProduit, fontSize = 20.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
                         Icon(
@@ -84,14 +90,16 @@ fun ProduitDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Évolution sur 30 jours", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    if (tendance != null) TendancePill(tendance)
-                }
+                BandeauHeros(
+                    nomProduit = nomProduit,
+                    unite = unite,
+                    prixActuelGnf = historique.lastOrNull()?.prixGnf,
+                    tendance = tendance
+                )
+            }
+
+            item {
+                Text("Évolution sur 30 jours", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
             item {
@@ -102,49 +110,31 @@ fun ProduitDetailScreen(
                 }
             }
 
-            if (comparaison != null) {
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                    ) {
-                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("Comparaison entre marchés", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                TuileComparaison(
-                                    "Le moins cher",
-                                    comparaison.moinsCherMarche,
-                                    comparaison.moinsCherCommune,
-                                    comparaison.moinsCherPrixGnf.enGnf(),
-                                    Baisse, BaisseFond, Modifier.weight(1f)
-                                )
-                                TuileComparaison(
-                                    "Le plus cher",
-                                    comparaison.plusCherMarche,
-                                    comparaison.plusCherCommune,
-                                    comparaison.plusCherPrixGnf.enGnf(),
-                                    Hausse, HausseFond, Modifier.weight(1f)
-                                )
-                            }
-                            Text("Moyenne : ${comparaison.moyenneGnf.enGnf()}", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                }
+            item {
+                Text(
+                    if (comparaison != null) "Prix par marché · moyenne ${comparaison.moyenneGnf.enGnf()}" else "Prix par marché",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
-
-            item { Text("Prix par marché", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
 
             if (!chargement && prixParMarche.isEmpty()) {
                 item { Text("Aucune donnée pour le moment", fontSize = 14.sp) }
             } else if (prixParMarche.isNotEmpty()) {
                 item {
+                    val tries = prixParMarche.sortedBy { it.prixGnf }
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Column(Modifier.padding(horizontal = 16.dp)) {
-                            prixParMarche.forEachIndexed { i, m ->
-                                LigneMarche(m, dernier = i == prixParMarche.lastIndex)
+                            tries.forEachIndexed { i, m ->
+                                val teinte = when (m.marcheId) {
+                                    comparaison?.moinsCherMarcheId -> BaisseFond
+                                    comparaison?.plusCherMarcheId -> HausseFond
+                                    else -> null
+                                }
+                                LigneMarche(m, teinte, dernier = i == tries.lastIndex)
                             }
                         }
                     }
@@ -154,32 +144,70 @@ fun ProduitDetailScreen(
     }
 }
 
+/**
+ * Image du produit (fallback icône générique tant que la photo n'a pas été
+ * ajoutée) avec le prix actuel et la tendance en surimpression.
+ */
 @Composable
-private fun TuileComparaison(
-    label: String,
-    marche: String,
-    commune: String,
-    prix: String,
-    texteColor: Color,
-    fond: Color,
-    modifier: Modifier = Modifier
+private fun BandeauHeros(
+    nomProduit: String,
+    unite: String,
+    prixActuelGnf: Long?,
+    tendance: String?
 ) {
-    Column(
-        modifier
-            .background(fond, shape = RoundedCornerShape(12.dp))
-            .padding(12.dp)
+    val context = LocalContext.current
+    val imageRes = remember(nomProduit) { produitImageRes(context, nomProduit) }
+
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .clip(RoundedCornerShape(16.dp))
     ) {
-        Text(label, fontSize = 14.sp, color = texteColor)
-        Text(marche, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = texteColor)
-        Text(commune, fontSize = 14.sp, color = texteColor)
-        Text(prix, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = texteColor)
+        if (imageRes != null) {
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = nomProduit,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(Modifier.fillMaxSize().background(StableFond), contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.ShoppingBasket, contentDescription = null, tint = Stable, modifier = Modifier.size(56.dp))
+            }
+        }
+        Box(
+            Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))))
+                .padding(12.dp)
+        ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text(
+                        prixActuelGnf?.enGnf() ?: "Aucun relevé",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    if (unite.isNotBlank()) {
+                        Text("par $unite", fontSize = 13.sp, color = Color.White.copy(alpha = 0.9f))
+                    }
+                }
+                if (tendance != null) TendancePill(tendance)
+            }
+        }
     }
 }
 
 @Composable
-private fun LigneMarche(m: PrixMarcheAffiche, dernier: Boolean) {
+private fun LigneMarche(m: PrixMarcheAffiche, teinte: Color?, dernier: Boolean) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 10.dp),
+        Modifier
+            .fillMaxWidth()
+            .then(if (teinte != null) Modifier.background(teinte, RoundedCornerShape(8.dp)) else Modifier)
+            .padding(horizontal = if (teinte != null) 10.dp else 0.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -195,11 +223,17 @@ private fun LigneMarche(m: PrixMarcheAffiche, dernier: Boolean) {
 
 /**
  * Dessine la courbe à partir de points déjà calculés (jour relatif, prix).
- * Ne calcule rien : min/max/positionnement viennent uniquement des données reçues.
+ * Ne calcule rien : min/max/positionnement viennent uniquement des données
+ * reçues. Repères visuels ajoutés par rapport à une simple ligne : lignes de
+ * niveau horizontales, remplissage dégradé, dernier point mis en évidence
+ * avec un repère pointillé, et bornes de la période en texte.
  */
 @Composable
 private fun CourbePrix(points: List<PointCourbe>) {
     val couleur = MaterialTheme.colorScheme.primary
+    val couleurTexte = MaterialTheme.colorScheme.onSurfaceVariant
+    val textMeasurer = rememberTextMeasurer()
+    val styleAxe = remember(couleurTexte) { TextStyle(fontSize = 11.sp, color = couleurTexte) }
     val min = points.minOf { it.prixGnf }
     val max = points.maxOf { it.prixGnf }
 
@@ -208,15 +242,29 @@ private fun CourbePrix(points: List<PointCourbe>) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("Min : ${min.enGnf()} · Max : ${max.enGnf()}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(8.dp))
-            Canvas(Modifier.fillMaxWidth().height(140.dp)) {
+            Text("Min : ${min.enGnf()} · Max : ${max.enGnf()}", fontSize = 14.sp, color = couleurTexte)
+            Spacer(Modifier.height(12.dp))
+            Canvas(Modifier.fillMaxWidth().height(180.dp)) {
+                val zoneAxe = 20.dp.toPx()
+                val bas = size.height - zoneAxe
                 val ecartPrix = (max - min).coerceAtLeast(1L).toFloat()
                 val ecartJour = (points.last().jour - points.first().jour).coerceAtLeast(1).toFloat()
+
+                // Lignes de niveau (haut / milieu / bas) pour donner une échelle visuelle.
+                listOf(0f, 0.5f, 1f).forEach { f ->
+                    val y = bas - f * bas
+                    drawLine(
+                        couleurTexte.copy(alpha = 0.15f),
+                        Offset(0f, y),
+                        Offset(size.width, y),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                }
+
                 val coords = points.map {
                     Offset(
                         x = (it.jour - points.first().jour) / ecartJour * size.width,
-                        y = size.height - (it.prixGnf - min) / ecartPrix * size.height
+                        y = bas - (it.prixGnf - min) / ecartPrix * bas
                     )
                 }
                 val ligne = Path().apply {
@@ -225,16 +273,41 @@ private fun CourbePrix(points: List<PointCourbe>) {
                 }
                 val aire = Path().apply {
                     addPath(ligne)
-                    lineTo(coords.last().x, size.height)
-                    lineTo(coords.first().x, size.height)
+                    lineTo(coords.last().x, bas)
+                    lineTo(coords.first().x, bas)
                     close()
                 }
-                drawPath(aire, couleur.copy(alpha = 0.12f))
+                drawPath(
+                    aire,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(couleur.copy(alpha = 0.28f), Color.Transparent),
+                        startY = 0f,
+                        endY = bas
+                    )
+                )
                 drawPath(ligne, couleur, style = Stroke(width = 4f))
+
                 coords.forEachIndexed { i, p ->
-                    val dernier = i == coords.lastIndex
-                    drawCircle(couleur, radius = if (dernier) 7f else 5f, center = p)
+                    if (i == coords.lastIndex) {
+                        drawLine(
+                            couleur.copy(alpha = 0.4f),
+                            Offset(p.x, p.y),
+                            Offset(p.x, bas),
+                            strokeWidth = 2f,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+                        )
+                        drawCircle(couleur, radius = 9f, center = p)
+                        drawCircle(Color.White, radius = 4f, center = p)
+                    } else {
+                        drawCircle(couleur.copy(alpha = 0.5f), radius = 4f, center = p)
+                    }
                 }
+
+                val nbJours = points.last().jour - points.first().jour
+                val texteDebut = textMeasurer.measure("Il y a $nbJours j", styleAxe)
+                drawText(texteDebut, topLeft = Offset(0f, size.height - texteDebut.size.height))
+                val texteFin = textMeasurer.measure("Aujourd'hui", styleAxe)
+                drawText(texteFin, topLeft = Offset(size.width - texteFin.size.width, size.height - texteFin.size.height))
             }
         }
     }

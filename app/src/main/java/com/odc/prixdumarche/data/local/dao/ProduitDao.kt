@@ -19,4 +19,10 @@ interface ProduitDao {
 
     @Query("SELECT * FROM produits WHERE id = :produitId")
     fun observerParId(produitId: Long): Flow<Produit?>
+
+    @Query("SELECT * FROM produits WHERE estFavori = 1 ORDER BY nom ASC")
+    fun observerFavoris(): Flow<List<Produit>>
+
+    @Query("UPDATE produits SET estFavori = :favori WHERE id = :produitId")
+    suspend fun definirFavori(produitId: Long, favori: Boolean)
 }

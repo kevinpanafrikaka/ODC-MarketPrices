@@ -9,5 +9,6 @@ data class Produit(
     val id: Long = 0,
     val nom: String,
     val unite: String,
-    val categorie: String
+    val categorie: String,
+    val estFavori: Boolean = false
 )
