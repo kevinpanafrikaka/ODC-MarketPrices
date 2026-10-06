@@ -31,6 +31,9 @@ interface ReleveePrixDao {
     )
     fun observerDerniersPrixParProduit(): Flow<List<ReleveePrix>>
 
+    @Query("SELECT * FROM relevees_prix ORDER BY date DESC")
+    fun observerTousLesReleves(): Flow<List<ReleveePrix>>
+
     @Query(
         "SELECT * FROM relevees_prix WHERE produitId = :produitId AND date >= :depuis ORDER BY date ASC"
     )

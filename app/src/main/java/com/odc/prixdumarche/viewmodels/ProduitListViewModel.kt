@@ -49,15 +49,15 @@ class ProduitListViewModel(
             combine(
                 produitRepository.observerProduits(),
                 marcheRepository.observerMarches(),
-                releveePrixRepository.observerDerniersPrixParProduit(),
+                releveePrixRepository.observerTousLesReleves(),
                 categorieFiltre,
                 marcheFiltre
-            ) { produits, marches, derniersPrix, categorie, marcheId ->
+            ) { produits, marches, tousLesReleves, categorie, marcheId ->
 
                 construireEtat(
                     produits,
                     marches,
-                    derniersPrix,
+                    tousLesReleves,
                     categorie,
                     marcheId
                 )
@@ -76,12 +76,12 @@ class ProduitListViewModel(
     private fun construireEtat(
         produits: List<Produit>,
         marches: List<Marche>,
-        derniersPrix: List<ReleveePrix>,
+        tousLesReleves: List<ReleveePrix>,
         categorie: String,
         marcheId: Long?
     ): ProduitListUiData {
 
-        val prixParProduit = derniersPrix.groupBy { it.produitId }
+        val prixParProduit = tousLesReleves.groupBy { it.produitId }
 
         val categories = listOf("Toutes") +
                 produits
