@@ -26,7 +26,8 @@ data class ReleveFormulaireUiData(
     val erreurProduit: String? = null,
     val erreurMarche: String? = null,
     val erreurPrix: String? = null,
-    val erreurDate: String? = null
+    val erreurDate: String? = null,
+    val enregistrementReussi: Boolean = false
 )
 
 class ReleveFormulaireViewModel(
@@ -169,7 +170,7 @@ class ReleveFormulaireViewModel(
                 prixTexte = ""
                 dateTexte = ""
 
-                publierEtat()
+                _uiState.value = UiState.Success(construireEtat().copy(enregistrementReussi = true))
 
             } catch (e: Exception) {
 
