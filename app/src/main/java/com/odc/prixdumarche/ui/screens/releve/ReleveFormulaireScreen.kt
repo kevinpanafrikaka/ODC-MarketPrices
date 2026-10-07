@@ -19,7 +19,6 @@ import com.odc.prixdumarche.ui.theme.PrixDuMarcheTheme
 
 // TODO(données/logique) : remplacer par les vrais modèles du Repository
 
-
 /**
  * Écran Formulaire de relevé.
  * Ne contient aucune logique métier : la validation (prix > 0, champs
@@ -40,6 +39,7 @@ fun ReleveFormulaireScreen(
     erreurMarche: String? = null,
     erreurPrix: String? = null,
     erreurDate: String? = null,
+    enregistrementReussi: Boolean = false,
     onProduitChoisi: (OptionChoix) -> Unit = {},
     onMarcheChoisi: (MarcheChoix) -> Unit = {},
     onPrixChange: (String) -> Unit = {},
@@ -47,6 +47,10 @@ fun ReleveFormulaireScreen(
     onEnregistrer: () -> Unit = {},
     onRetour: () -> Unit = {}
 ) {
+    LaunchedEffect(enregistrementReussi) {
+        if (enregistrementReussi) onRetour()
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
