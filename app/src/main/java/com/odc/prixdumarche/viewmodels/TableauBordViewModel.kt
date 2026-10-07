@@ -66,7 +66,7 @@ class TableauBordViewModel(
         }
 
         val historiques = produits.map { produit ->
-            releveePrixRepository.observerHistorique30Jours(produit.id)
+            releveePrixRepository.observerHistorique7Jours(produit.id)
         }
 
         return combine(historiques) { tableaux ->

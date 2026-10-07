@@ -27,6 +27,7 @@ data class ReleveFormulaireUiData(
     val erreurMarche: String? = null,
     val erreurPrix: String? = null,
     val erreurDate: String? = null,
+    val erreurGenerale: String? = null,
     val enregistrementReussi: Boolean = false
 )
 
@@ -54,6 +55,7 @@ class ReleveFormulaireViewModel(
     private var erreurMarche: String? = null
     private var erreurPrix: String? = null
     private var erreurDate: String? = null
+    private var erreurGenerale: String? = null
 
     init {
         observerOptions()
@@ -119,6 +121,7 @@ class ReleveFormulaireViewModel(
         erreurMarche = null
         erreurPrix = null
         erreurDate = null
+        erreurGenerale = null
 
         var valide = true
 
@@ -174,10 +177,8 @@ class ReleveFormulaireViewModel(
 
             } catch (e: Exception) {
 
-                _uiState.value =
-                    UiState.Error(
-                        "Impossible d'enregistrer le relevé."
-                    )
+                erreurGenerale = "Impossible d'enregistrer le relevé."
+                publierEtat()
             }
         }
     }
@@ -213,7 +214,8 @@ class ReleveFormulaireViewModel(
             erreurProduit = erreurProduit,
             erreurMarche = erreurMarche,
             erreurPrix = erreurPrix,
-            erreurDate = erreurDate
+            erreurDate = erreurDate,
+            erreurGenerale = erreurGenerale
         )
     }
 
