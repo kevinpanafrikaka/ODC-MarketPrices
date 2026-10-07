@@ -8,6 +8,20 @@
         androidx.compose.material3 côté Compose).
     -->
     <style name="Theme.PrixDuMarche" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/orange_primary</item>
+        <item name="android:statusBarColor">@color/vert_primaire</item>
+    </style>
+
+    <!--
+        Thème affiché par le système entre le tap sur l'icône et le premier
+        rendu Compose (API 31+ via androidx.core.splashscreen ; sur les
+        versions antérieures, androidx.core.splashscreen rejoue le même
+        visuel via windowBackground). L'illustration plein écran du marché
+        est affichée juste après par SplashScreenScreen.kt (Compose), car
+        l'API système ne supporte qu'une icône + une couleur de fond.
+    -->
+    <style name="Theme.PrixDuMarche.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/vert_primaire</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground_white</item>
+        <item name="postSplashScreenTheme">@style/Theme.PrixDuMarche</item>
     </style>
 </resources>

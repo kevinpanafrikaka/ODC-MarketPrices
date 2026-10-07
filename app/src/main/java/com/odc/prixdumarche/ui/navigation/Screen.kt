@@ -6,6 +6,7 @@ package com.odc.prixdumarche.ui.navigation
  * concurrentes dans leurs branches respectives.
  */
 sealed class Screen(val route: String) {
+    data object Splash : Screen("splash")
     data object ProduitListe : Screen("produits")
     data object ProduitDetail : Screen("produits/{produitId}") {
         fun buildRoute(produitId: Long) = "produits/$produitId"

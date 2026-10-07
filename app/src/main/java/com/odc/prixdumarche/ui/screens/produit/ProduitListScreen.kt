@@ -65,7 +65,7 @@ fun ProduitListScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Prix du Marché", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                    Text("eMarket", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                     Surface(
                         onClick = onTableauDeBord,
                         color = MaterialTheme.colorScheme.surface,
