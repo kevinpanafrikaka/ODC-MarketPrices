@@ -22,7 +22,9 @@ import com.odc.prixdumarche.domain.model.ProduitAffiche
 import com.odc.prixdumarche.ui.theme.*
 import com.odc.prixdumarche.ui.util.enGnf
 import com.odc.prixdumarche.ui.components.TendancePill
-
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 // TODO(données) : remplacer par les vrais modèles du Repository
 
 
@@ -124,12 +126,20 @@ fun ProduitListScreen(
                     Text("Aucune donnée pour le moment", fontSize = 16.sp)
                 }
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(produits, key = { it.id }) { p ->
-                        CarteProduit(p) { onProduitClick(p.id) }
+                if (!chargement && produits.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Aucune donnée pour le moment", fontSize = 16.sp)
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 96.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(produits, key = { it.id }) { p ->
+                            CarteProduit(p) { onProduitClick(p.id) }
+                        }
                     }
                 }
             }
@@ -155,6 +165,19 @@ private fun ChipFiltre(label: String, actif: Boolean, onClick: () -> Unit) {
     }
 }
 
+private fun emojiProduit(nom: String, categorie: String): String = when {
+    nom.contains("Riz", ignoreCase = true) -> "🌾"
+    nom.contains("Huile", ignoreCase = true) -> "🧴"
+    nom.contains("Oignon", ignoreCase = true) -> "🧅"
+    nom.contains("Tomate", ignoreCase = true) -> "🍅"
+    nom.contains("Poisson", ignoreCase = true) -> "🐟"
+    categorie == "Céréales" -> "🌾"
+    categorie == "Épicerie" -> "🧴"
+    categorie == "Légumes" -> "🥬"
+    categorie == "Poissons" -> "🐟"
+    else -> "🛒"
+}
+
 @Composable
 private fun CarteProduit(p: ProduitAffiche, onClick: () -> Unit) {
     Card(
@@ -162,25 +185,20 @@ private fun CarteProduit(p: ProduitAffiche, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
-        Row(
-            Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Column(Modifier.padding(12.dp)) {
             Box(
-                Modifier.size(44.dp).background(StableFond, CircleShape),
+                Modifier.size(48.dp).background(StableFond, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(p.nom.first().toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Stable)
+                Text(emojiProduit(p.nom, p.categorie), fontSize = 24.sp)
             }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(p.nom, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("par ${p.unite} · ${p.categorie}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(p.dernierPrixGnf?.enGnf() ?: "Aucun relevé", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                TendancePill(p.tendance)
-            }
+            Spacer(Modifier.height(8.dp))
+            Text(p.nom, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("par ${p.unite} · ${p.categorie}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(6.dp))
+            Text(p.dernierPrixGnf?.enGnf() ?: "Aucun relevé", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            TendancePill(p.tendance)
         }
     }
 }
