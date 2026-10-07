@@ -39,6 +39,7 @@ fun ReleveFormulaireScreen(
     erreurMarche: String? = null,
     erreurPrix: String? = null,
     erreurDate: String? = null,
+    erreurGenerale: String? = null,
     enregistrementReussi: Boolean = false,
     onProduitChoisi: (OptionChoix) -> Unit = {},
     onMarcheChoisi: (MarcheChoix) -> Unit = {},
@@ -84,6 +85,13 @@ fun ReleveFormulaireScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (erreurGenerale != null) {
+                Text(
+                    "⚠ $erreurGenerale",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
             SelecteurProduit(
                 choix = produitChoisi?.label,
                 options = produits,
