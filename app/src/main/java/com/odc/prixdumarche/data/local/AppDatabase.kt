@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.odc.prixdumarche.data.local.dao.MarcheDao
 import com.odc.prixdumarche.data.local.dao.ProduitDao
@@ -19,7 +18,7 @@ import java.util.concurrent.TimeUnit
 
 @Database(
     entities = [Marche::class, Produit::class, ReleveePrix::class],
-    version = 2,
+    version = 1,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -31,12 +30,6 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var instance: AppDatabase? = null
 
-        private val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE produits ADD COLUMN estFavori INTEGER NOT NULL DEFAULT 0")
-            }
-        }
-
         fun getInstance(context: Context, scope: CoroutineScope): AppDatabase {
             instance?.let { return it }
             synchronized(this) {
@@ -47,7 +40,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "prix_du_marche.db"
                 )
-                    .addMigrations(MIGRATION_1_2)
                     .addCallback(SeedCallback(scope) { database })
                     .build()
                 instance = database

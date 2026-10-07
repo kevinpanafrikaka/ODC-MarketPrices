@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,12 +37,10 @@ import androidx.navigation.compose.rememberNavController
 import com.odc.prixdumarche.PrixDuMarcheApplication
 import com.odc.prixdumarche.data.AppContainer
 import com.odc.prixdumarche.ui.screens.dashboard.TableauBordScreen
-import com.odc.prixdumarche.ui.screens.favoris.FavorisScreen
 import com.odc.prixdumarche.ui.screens.produit.ProduitDetailScreen
 import com.odc.prixdumarche.ui.screens.produit.ProduitListScreen
 import com.odc.prixdumarche.ui.screens.releve.ReleveFormulaireScreen
 import com.odc.prixdumarche.ui.screens.splash.SplashScreen
-import com.odc.prixdumarche.viewmodels.FavorisViewModel
 import com.odc.prixdumarche.viewmodels.ProduitDetailViewModel
 import com.odc.prixdumarche.viewmodels.ProduitListViewModel
 import com.odc.prixdumarche.viewmodels.ReleveFormulaireViewModel
@@ -54,8 +51,7 @@ private data class OngletBas(val route: String, val label: String, val icone: Im
 
 private val ONGLETS_BAS = listOf(
     OngletBas(Screen.ProduitListe.route, "Accueil", Icons.Outlined.Home),
-    OngletBas(Screen.TableauBord.route, "Tableau de bord", Icons.Outlined.BarChart),
-    OngletBas(Screen.Favoris.route, "Favoris", Icons.Outlined.FavoriteBorder)
+    OngletBas(Screen.TableauBord.route, "Tableau de bord", Icons.Outlined.BarChart)
 )
 
 /**
@@ -63,9 +59,9 @@ private val ONGLETS_BAS = listOf(
  * ViewModel (StateFlow<UiState<...>>) via le conteneur de dépendances
  * manuel exposé par PrixDuMarcheApplication (pas de Hilt dans ce projet).
  *
- * Accueil / Tableau de bord / Favoris sont les 3 onglets de la navbar du
- * bas (visible uniquement sur ces 3 routes) ; détail produit et formulaire
- * de relevé restent des écrans empilés par-dessus, sans navbar.
+ * Accueil / Tableau de bord sont les 2 onglets de la navbar du bas (visible
+ * uniquement sur ces 2 routes) ; détail produit et formulaire de relevé
+ * restent des écrans empilés par-dessus, sans navbar.
  */
 @Composable
 fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavController()) {
@@ -127,7 +123,6 @@ fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavControlle
                     categorieFiltre = data?.categorieFiltre ?: "Toutes",
                     chargement = uiState is UiState.Loading,
                     onCategorieChoisie = viewModel::onCategorieChoisie,
-                    onToggleFavori = viewModel::onToggleFavori,
                     onAjouterReleve = {
                         navController.navigate(Screen.ReleveFormulaire.route)
                     }
@@ -217,33 +212,9 @@ fun PrixDuMarcheNavGraph(navController: NavHostController = rememberNavControlle
                 TableauBordScreen(
                     panierMoyenGnf = data?.panierMoyenGnf,
                     nbProduitsPanier = data?.nbProduitsPanier ?: 0,
-                    nbFavoris = data?.nbFavoris ?: 0,
                     hausses = data?.hausses ?: emptyList(),
                     baisses = data?.baisses ?: emptyList(),
                     chargement = uiState is UiState.Loading
-                )
-            }
-            composable(Screen.Favoris.route) {
-                val viewModel: FavorisViewModel = viewModel(
-                    factory = viewModelFactory {
-                        initializer {
-                            FavorisViewModel(
-                                container.produitRepository,
-                                container.releveePrixRepository
-                            )
-                        }
-                    }
-                )
-                val uiState by viewModel.uiState.collectAsState()
-                val data = (uiState as? UiState.Success)?.data
-
-                FavorisScreen(
-                    produits = data?.produits ?: emptyList(),
-                    chargement = uiState is UiState.Loading,
-                    onProduitClick = { produitId ->
-                        navController.navigate(Screen.ProduitDetail.buildRoute(produitId))
-                    },
-                    onToggleFavori = viewModel::onToggleFavori
                 )
             }
         }

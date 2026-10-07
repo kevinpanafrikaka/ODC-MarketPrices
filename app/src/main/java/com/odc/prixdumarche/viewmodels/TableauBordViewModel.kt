@@ -21,7 +21,6 @@ import kotlinx.coroutines.launch
 data class TableauBordUiData(
     val panierMoyenGnf: Long?,
     val nbProduitsPanier: Int,
-    val nbFavoris: Int,
     val hausses: List<VariationAffichee>,
     val baisses: List<VariationAffichee>
 )
@@ -44,11 +43,8 @@ class TableauBordViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observerProduits() {
         viewModelScope.launch {
-            combine(
-                produitRepository.observerProduits(),
-                produitRepository.observerFavoris()
-            ) { produits, favoris -> produits to favoris.size }
-                .flatMapLatest { (produits, nbFavoris) -> observerTableauDeBord(produits, nbFavoris) }
+            produitRepository.observerProduits()
+                .flatMapLatest { produits -> observerTableauDeBord(produits) }
                 .collect { data ->
                     _uiState.value = if (data == null) UiState.Empty else UiState.Success(data)
                 }
@@ -60,10 +56,7 @@ class TableauBordViewModel(
      * proprement les souscriptions aux historiques précédents avant d'en
      * recréer de nouvelles, au lieu de les empiler.
      */
-    private fun observerTableauDeBord(
-        produits: List<Produit>,
-        nbFavoris: Int
-    ): Flow<TableauBordUiData?> {
+    private fun observerTableauDeBord(produits: List<Produit>): Flow<TableauBordUiData?> {
 
         if (produits.isEmpty()) {
             return flowOf(null)
@@ -74,13 +67,12 @@ class TableauBordViewModel(
         }
 
         return combine(historiques) { tableaux ->
-            calculerTableauDeBord(produits.zip(tableaux), nbFavoris)
+            calculerTableauDeBord(produits.zip(tableaux))
         }
     }
 
     private fun calculerTableauDeBord(
-        donnees: List<Pair<Produit, List<ReleveePrix>>>,
-        nbFavoris: Int
+        donnees: List<Pair<Produit, List<ReleveePrix>>>
     ): TableauBordUiData? {
 
         val variations = donnees.mapNotNull {
@@ -113,7 +105,6 @@ class TableauBordViewModel(
         return TableauBordUiData(
             panierMoyenGnf = panierMoyen,
             nbProduitsPanier = derniersPrix.size,
-            nbFavoris = nbFavoris,
             hausses = hausses,
             baisses = baisses
         )

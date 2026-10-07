@@ -11,9 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface ProduitRepository {
     fun observerProduits(): Flow<List<Produit>>
     fun observerProduit(produitId: Long): Flow<Produit?>
-    fun observerFavoris(): Flow<List<Produit>>
     suspend fun ajouter(produit: Produit): Long
-    suspend fun basculerFavori(produitId: Long, favori: Boolean)
 }
 
 class ProduitRepositoryImpl(private val produitDao: ProduitDao) : ProduitRepository {
@@ -22,12 +20,7 @@ class ProduitRepositoryImpl(private val produitDao: ProduitDao) : ProduitReposit
     override fun observerProduit(produitId: Long): Flow<Produit?> =
         produitDao.observerParId(produitId)
 
-    override fun observerFavoris(): Flow<List<Produit>> = produitDao.observerFavoris()
-
     override suspend fun ajouter(produit: Produit): Long = produitDao.insert(produit)
-
-    override suspend fun basculerFavori(produitId: Long, favori: Boolean) =
-        produitDao.definirFavori(produitId, favori)
 }
 
 

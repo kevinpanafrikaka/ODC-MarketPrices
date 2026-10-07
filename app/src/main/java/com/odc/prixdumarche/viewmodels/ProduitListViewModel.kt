@@ -88,8 +88,7 @@ class ProduitListViewModel(
                     categorie = produit.categorie,
                     dernierPrixGnf = releves.firstOrNull()?.prixGnf,
                     tendance = calculerTendance(releves).name,
-                    historiquePrixGnf = releves.asReversed().map { it.prixGnf },
-                    estFavori = produit.estFavori
+                    historiquePrixGnf = releves.asReversed().map { it.prixGnf }
                 )
             }
 
@@ -102,11 +101,5 @@ class ProduitListViewModel(
 
     fun onCategorieChoisie(categorie: String) {
         categorieFiltre.value = categorie
-    }
-
-    fun onToggleFavori(produitId: Long, favori: Boolean) {
-        viewModelScope.launch {
-            produitRepository.basculerFavori(produitId, favori)
-        }
     }
 }

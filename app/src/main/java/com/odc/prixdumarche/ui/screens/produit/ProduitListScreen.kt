@@ -38,7 +38,6 @@ fun ProduitListScreen(
     categorieFiltre: String = "Toutes",
     chargement: Boolean = false,
     onCategorieChoisie: (String) -> Unit = {},
-    onToggleFavori: (Long, Boolean) -> Unit = { _, _ -> },
     onAjouterReleve: () -> Unit = {}
 ) {
     Scaffold(
@@ -100,8 +99,7 @@ fun ProduitListScreen(
                     items(produits, key = { it.id }) { p ->
                         CarteProduitGrille(
                             p = p,
-                            onClick = { onProduitClick(p.id) },
-                            onToggleFavori = { favori -> onToggleFavori(p.id, favori) }
+                            onClick = { onProduitClick(p.id) }
                         )
                     }
                 }
@@ -149,7 +147,7 @@ private val CATEGORIES_FAKE = listOf("Toutes", "Céréales", "Fruits", "Légumes
 private val PRODUITS_FAKE = listOf(
     ProduitAffiche(1, "Riz local", "kg", "Céréales", 9_600, "HAUSSE", listOf(8_900, 9_100, 9_300, 9_600)),
     ProduitAffiche(2, "Huile de palme", "litre", "Huiles", 18_900, "HAUSSE", listOf(17_500, 18_000, 18_900)),
-    ProduitAffiche(3, "Oignon", "kg", "Légumes", 7_300, "STABLE", listOf(7_300, 7_300, 7_300), estFavori = true),
+    ProduitAffiche(3, "Oignon", "kg", "Légumes", 7_300, "STABLE", listOf(7_300, 7_300, 7_300)),
     ProduitAffiche(4, "Tomate", "tas", "Légumes", 4_800, "BAISSE", listOf(5_900, 5_200, 4_800)),
     ProduitAffiche(5, "Poisson fumé", "kg", "Poissons", 34_500, "BAISSE", listOf(37_000, 35_800, 34_500))
 )

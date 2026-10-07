@@ -6,7 +6,7 @@ import com.odc.prixdumarche.domain.Tendance
 /**
  * Tendance simple (direction uniquement, sans pourcentage) à partir de
  * relevés triés du plus récent au plus ancien. Partagée par les ViewModels
- * qui affichent une liste de produits (liste principale, favoris).
+ * qui affichent une liste de produits.
  */
 fun calculerTendance(releves: List<ReleveePrix>): Tendance {
     if (releves.size < 2) {

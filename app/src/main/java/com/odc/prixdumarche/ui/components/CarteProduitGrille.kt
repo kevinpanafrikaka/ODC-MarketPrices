@@ -13,21 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -36,7 +30,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.odc.prixdumarche.domain.model.ProduitAffiche
-import com.odc.prixdumarche.ui.theme.Hausse
 import com.odc.prixdumarche.ui.theme.Stable
 import com.odc.prixdumarche.ui.theme.StableFond
 import com.odc.prixdumarche.ui.util.categorieIcon
@@ -46,13 +39,12 @@ import com.odc.prixdumarche.ui.util.produitImageRes
 /**
  * Carte produit au format portrait (9:16) pour une grille à 2 colonnes :
  * image en haut (ou icône de catégorie en repli tant que l'image n'existe
- * pas), cœur de favori en overlay, nom/unité/prix/tendance en dessous.
+ * pas), nom/unité/prix/tendance en dessous.
  */
 @Composable
 fun CarteProduitGrille(
     p: ProduitAffiche,
-    onClick: () -> Unit,
-    onToggleFavori: (Boolean) -> Unit
+    onClick: () -> Unit
 ) {
     val context = LocalContext.current
     val imageRes = remember(p.nom) { produitImageRes(context, p.nom) }
@@ -84,24 +76,6 @@ fun CarteProduitGrille(
                             contentDescription = p.categorie,
                             tint = Stable,
                             modifier = Modifier.size(40.dp)
-                        )
-                    }
-                }
-                IconButton(
-                    onClick = { onToggleFavori(!p.estFavori) },
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                    Box(
-                        Modifier
-                            .size(28.dp)
-                            .background(Color.White.copy(alpha = 0.85f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            if (p.estFavori) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = if (p.estFavori) "Retirer des favoris" else "Ajouter aux favoris",
-                            tint = if (p.estFavori) Hausse else Stable,
-                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }

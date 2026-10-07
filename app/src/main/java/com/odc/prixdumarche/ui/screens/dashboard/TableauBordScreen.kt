@@ -24,8 +24,8 @@ import com.odc.prixdumarche.ui.util.enGnf
 
 /**
  * Écran Tableau de bord (onglet bas).
- * Ne contient aucune logique métier : panier moyen, nb favoris, hausses et
- * baisses sont calculés en amont (ViewModel) et transmis tout prêts ici.
+ * Ne contient aucune logique métier : panier moyen, hausses et baisses sont
+ * calculés en amont (ViewModel) et transmis tout prêts ici.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +33,6 @@ fun TableauBordScreen(
     // TODO(logique) : remplacer ces valeurs par défaut par viewModel.uiState.collectAsState()
     panierMoyenGnf: Long? = null,
     nbProduitsPanier: Int = 0,
-    nbFavoris: Int = 0,
     hausses: List<VariationAffichee> = emptyList(),
     baisses: List<VariationAffichee> = emptyList(),
     chargement: Boolean = false,
@@ -83,7 +82,6 @@ fun TableauBordScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         TuileStat("Panier moyen", panierMoyenGnf?.enGnf() ?: "—", Modifier.weight(1f))
                         TuileStat("Produits", "$nbProduitsPanier", Modifier.weight(1f))
-                        TuileStat("Favoris", "$nbFavoris", Modifier.weight(1f))
                     }
                 }
 
@@ -161,7 +159,6 @@ fun TableauBordScreenPreview() {
         TableauBordScreen(
             panierMoyenGnf = 75_100,
             nbProduitsPanier = 5,
-            nbFavoris = 2,
             hausses = listOf(
                 VariationAffichee("Riz", 9_600, 4, "HAUSSE"),
                 VariationAffichee("Huile", 18_900, 16, "HAUSSE")
