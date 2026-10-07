@@ -16,6 +16,7 @@ interface ReleveePrixRepository {
     fun observerDerniersPrixParProduit(): Flow<List<ReleveePrix>>
     fun observerTousLesReleves(): Flow<List<ReleveePrix>>
     fun observerHistorique30Jours(produitId: Long): Flow<List<ReleveePrix>>
+    fun observerHistorique7Jours(produitId: Long): Flow<List<ReleveePrix>>
     fun observerDernierPrixParMarche(produitId: Long): Flow<List<ReleveePrix>>
     suspend fun ajouter(releve: ReleveePrix): Long
 }
@@ -32,6 +33,11 @@ class ReleveePrixRepositoryImpl(
 
     override fun observerHistorique30Jours(produitId: Long): Flow<List<ReleveePrix>> {
         val depuis = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30)
+        return releveePrixDao.observerHistorique(produitId, depuis)
+    }
+
+    override fun observerHistorique7Jours(produitId: Long): Flow<List<ReleveePrix>> {
+        val depuis = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7)
         return releveePrixDao.observerHistorique(produitId, depuis)
     }
 
